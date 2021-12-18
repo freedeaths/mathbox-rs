@@ -1,0 +1,15 @@
+[package]
+name = "mathbox"
+version = "0.1.0"
+authors = ["freedeaths <register917@gmail.com>"]
+edition = "2021"
+description = "A math toolbox"
+keywords = ["math", "data prcessing"]
+categories = ["Mathematics"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/freedeaths/mathbox-rs.git"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
