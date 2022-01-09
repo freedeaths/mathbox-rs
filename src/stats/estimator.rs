@@ -1,5 +1,5 @@
 pub fn mean(series: &[f64]) -> f64 {
-    if series.len() == 0 {
+    if series.is_empty() {
         panic!("Cannot calculate mean of empty series");
     }
     series.iter().sum::<f64>() / series.len() as f64
@@ -22,7 +22,7 @@ pub fn var(series: &[f64], biased: bool) -> f64 {
 }
 
 pub fn std(series: &[f64], biased: bool) -> f64 {
-        var(series, biased).sqrt()
+    var(series, biased).sqrt()
 }
 
 pub fn median(series: &[f64]) -> f64 {
@@ -40,7 +40,13 @@ pub fn pcc(x: &[f64], y: &[f64], lag_max: usize) -> Vec<(isize, f64)> {
     if i != y.len() {
         panic!("Cannot calculate pearson correlation coefficient with different length series");
     }
-    if x.iter().copied().fold(f64::NAN, f64::max) == x.iter().copied().fold(f64::NAN, f64::min) || y.iter().copied().fold(f64::NAN, f64::max) == y.iter().copied().fold(f64::NAN, f64::min) {
+    if (x.iter().copied().fold(f64::NAN, f64::max) - x.iter().copied().fold(f64::NAN, f64::min))
+        .abs()
+        < 1e-10
+        || (y.iter().copied().fold(f64::NAN, f64::max) - y.iter().copied().fold(f64::NAN, f64::min))
+            .abs()
+            < 1e-10
+    {
         panic!("Cannot calculate pearson correlation coefficient with constant series");
     }
     let mut lag_max = lag_max;
@@ -48,20 +54,24 @@ pub fn pcc(x: &[f64], y: &[f64], lag_max: usize) -> Vec<(isize, f64)> {
         lag_max = i - 1;
     }
     let mut result: Vec<(isize, f64)> = vec![];
-    let mut new_x = vec![];
-    for _ in 0..(i - 1) {
-        new_x.push(0.0);
-    }
+    let mut new_x: Vec<f64> = vec![];
+    let add_x = vec![0.0; i - 1];
+    new_x.append(&mut add_x.to_vec());
     new_x.append(&mut x.to_vec());
-    for _ in 0..(i - 1) {
-        new_x.push(0.0);
-    }
-    for k in i -lag_max -1.. i + lag_max {
+    new_x.append(&mut add_x.to_vec());
+    for k in i - lag_max - 1..i + lag_max {
         let x_lag = new_x[k..(k + i)].to_vec();
-        if x_lag.iter().copied().fold(f64::NAN, f64::max) == x_lag.iter().copied().fold(f64::NAN, f64::min) {
+        if (x_lag.iter().copied().fold(f64::NAN, f64::max)
+            - x_lag.iter().copied().fold(f64::NAN, f64::min))
+        .abs()
+            < 1e-10
+        {
             continue;
         }
-        result.push((k as isize + 1 - i as isize, pearson_correlation_coefficient(y, &new_x[k..(k + i)])));
+        result.push((
+            k as isize + 1 - i as isize,
+            pearson_correlation_coefficient(y, &new_x[k..(k + i)]),
+        ));
     }
     result
 }
@@ -70,7 +80,13 @@ pub fn pearson_correlation_coefficient(x: &[f64], y: &[f64]) -> f64 {
     if x.len() != y.len() {
         panic!("Cannot calculate pearson correlation coefficient with different length series");
     }
-    if x.iter().copied().fold(f64::NAN, f64::max) == x.iter().copied().fold(f64::NAN, f64::min) || y.iter().copied().fold(f64::NAN, f64::max) == y.iter().copied().fold(f64::NAN, f64::min) {
+    if (x.iter().copied().fold(f64::NAN, f64::max) - x.iter().copied().fold(f64::NAN, f64::min))
+        .abs()
+        < 1e-10
+        || (y.iter().copied().fold(f64::NAN, f64::max) - y.iter().copied().fold(f64::NAN, f64::min))
+            .abs()
+            < 1e-10
+    {
         panic!("Cannot calculate pearson correlation coefficient with constant series");
     }
     let x_mean = mean(x);
@@ -84,6 +100,29 @@ pub fn pearson_correlation_coefficient(x: &[f64], y: &[f64]) -> f64 {
         xy_qsum += (x[i] - x_mean) * (y[i] - y_mean);
     }
     xy_qsum / (x_qsum * y_qsum).sqrt()
+}
+
+fn pairwise_distance_sumavg(x: &[f64], y: &[f64]) -> f64 {
+    let mut sum = 0.0;
+    for xitem in x {
+        for yitem in y {
+            sum += (xitem - yitem).abs();
+        }
+    }
+    sum / (x.len() as f64 * y.len() as f64)
+}
+
+#[allow(clippy::many_single_char_names)]
+pub fn energy_distance(x: &[f64], y: &[f64], normalized: bool) -> f64 {
+    let a = pairwise_distance_sumavg(x, y);
+    let b = pairwise_distance_sumavg(x, x);
+    let c = pairwise_distance_sumavg(y, y);
+    let e_dis = 2. * a - b - c;
+    if normalized {
+        e_dis / (2. * a + f64::EPSILON)
+    } else {
+        e_dis
+    }
 }
 
 #[cfg(test)]
@@ -139,29 +178,44 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let y = vec![5.0, 4.0, 3.0, 2.0, 1.0];
         assert_eq!(pearson_correlation_coefficient(&x, &y), -1.0);
-        let a = [1.,2.,3.,4.,0.,1.,2.,3.,4.,0.,1.,2.,3.,4.,0.,1.,2.,3.,4.,0.];
-        let b = [1.,2.,3.,3.,0.,1.,2.,3.,4.,0.,1.,1.,4.,4.,0.,1.,2.,3.,4.,0.];
+        let a = [1., 2., 3., 4., 0., 1., 2., 3., 4., 0., 1., 2., 3., 4., 0., 1., 2., 3., 4., 0.];
+        let b = [1., 2., 3., 3., 0., 1., 2., 3., 4., 0., 1., 1., 4., 4., 0., 1., 2., 3., 4., 0.];
         assert_relative_eq!(pearson_correlation_coefficient(&a, &b), 0.964, epsilon = 1e-3);
     }
 
     #[test]
     fn test_pcc() {
-        let a = [0.,1.,2.,3.,4.,0.,1.,2.,3.,4.,0.,1.,2.,3.,4.,0.,1.,2.,3.,4.];
-        let b = [1.,2.,3.,3.,0.,1.,2.,3.,4.,0.,1.,1.,4.,4.,0.,1.,2.,3.,4.,0.];
+        let a = [0., 1., 2., 3., 4., 0., 1., 2., 3., 4., 0., 1., 2., 3., 4., 0., 1., 2., 3., 4.];
+        let b = [1., 2., 3., 3., 0., 1., 2., 3., 4., 0., 1., 1., 4., 4., 0., 1., 2., 3., 4., 0.];
         let result = pcc(&a, &b, 4);
         let expected = [
-        (-4, 0.75709),
-        (-3, 0.013114),
-        (-2, -0.499392),
-        (-1, -0.3793792),
-        (0, 0.),
-        (1, 0.96362),
-        (2, 0.11803),
-        (3, -0.484421),
-        (4, -0.411908)];
+            (-4, 0.75709),
+            (-3, 0.013114),
+            (-2, -0.499392),
+            (-1, -0.3793792),
+            (0, 0.),
+            (1, 0.96362),
+            (2, 0.11803),
+            (3, -0.484421),
+            (4, -0.411908),
+        ];
         for i in 0..result.len() {
             assert_eq!(result[i].0, expected[i].0);
             assert_relative_eq!(result[i].1, expected[i].1, epsilon = 1e-3);
         }
+    }
+
+    #[test]
+    fn test_pairwise_distance_sumavg() {
+        let a = vec![0., 1., 2.];
+        let b = vec![4., 5.];
+        assert_eq!(pairwise_distance_sumavg(&a, &b), 3.5);
+    }
+
+    #[test]
+    fn test_energy_distatns() {
+        let a = [0., 1., 2.];
+        let b = [4., 5.];
+        assert_relative_eq!(energy_distance(&a, &b, false), 5.61111, epsilon = 1e-3);
     }
 }
