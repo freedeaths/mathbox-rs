@@ -1,6 +1,11 @@
-//pub fn local_minmax(signal: &[f64], closed) -> (Vec<(usize, f64)>, Vec<(usize, f64)>) {
-//
-//}
+/*
+pub fn local_minmax(signal: &[f64], closed: bool) -> (Vec<usize>, Vec<usize>) {
+    let mut minima = vec![];
+    let mut maxima = vec![];
+    let mut prev = signal[0];
+
+    (minima, maxima)
+} */
 
 /// Find argmax of slice.
 ///

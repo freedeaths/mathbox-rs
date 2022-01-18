@@ -15,7 +15,7 @@ repository = "https://github.com/freedeaths/mathbox-rs.git"
 [lib]
 name = "mathbox"
 path = "src/lib.rs"
-crate-type = ["lib"]
+crate-type = ["lib", "cdylib"]
 
 #[[example]]
 #name = ""

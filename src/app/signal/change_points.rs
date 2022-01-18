@@ -32,6 +32,7 @@ fn calculate_t_stats(
     }
 }
 
+//#[no_mangle]
 pub fn e_divisive(signal: &[f64], jump: usize, p_value: f64, permutations: usize) -> Vec<usize> {
     let mut change_points = vec![];
     let mut window = vec![0, signal.len() - 1];
