@@ -98,8 +98,18 @@ mod tests {
     }
 
     #[test]
+    fn test_rdft() {
+        assert_eq!(0,0);
+    }
+
     fn test_irdft() {
         let signal = vec![1.0, 2.0, 1.0, -1.0, 1.5, 5.];
+        let rdft_signal = rdft(&signal);
+        let res = irdft(&rdft_signal);
+        for i in 0..signal.len() {
+            assert_relative_eq!(res[i], signal[i], epsilon = 1e-6);
+        }
+        let signal = vec![1.0, 2.0, 1.0, -1.0, 1.5];
         let rdft_signal = rdft(&signal);
         let res = irdft(&rdft_signal);
         for i in 0..signal.len() {
