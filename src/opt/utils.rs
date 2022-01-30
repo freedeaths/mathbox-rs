@@ -1,6 +1,5 @@
 use find_peaks::PeakFinder;
 
-
 pub fn local_max(signal: &[f64], prominence: f64) -> Vec<usize> {
     let mut fp = PeakFinder::new(signal);
     fp.with_min_prominence(prominence);
@@ -43,7 +42,6 @@ pub fn argsort<T: PartialOrd>(data: &[T], reverse: bool) -> Vec<usize> {
     }
     indices
 }
-
 
 #[cfg(test)]
 mod tests {

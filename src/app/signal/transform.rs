@@ -99,9 +99,10 @@ mod tests {
 
     #[test]
     fn test_rdft() {
-        assert_eq!(0,0);
+        assert_eq!(0, 0);
     }
 
+    #[test]
     fn test_irdft() {
         let signal = vec![1.0, 2.0, 1.0, -1.0, 1.5, 5.];
         let rdft_signal = rdft(&signal);

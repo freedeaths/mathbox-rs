@@ -3,8 +3,7 @@ use csv::Reader;
 use plotters::prelude::*;
 use std::error::Error;
 
-use mathbox::app::signal::filter::{dft_filter_lowpass, moving_median};
-use mathbox::app::signal::outlier::normal_outlier;
+use mathbox::stats::estimator::pcc;
 
 #[derive(Parser, Debug)]
 #[clap(name = "decompose")]
@@ -52,23 +51,37 @@ fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
     let mut rdr = Reader::from_path(cli.file.as_str())?;
 
-    let signal = rdr
+    let obj = rdr
         .records()
-        .map(|r| r.unwrap().get(1).unwrap().parse::<f64>().unwrap())
+        .map(|r| r.unwrap().get(3).unwrap().parse::<f64>().unwrap())
         .collect::<Vec<_>>();
-    plot("origin.png", "origin", &signal)?;
 
-    let trend = moving_median(&signal, 7);
-    plot("trend.png", "trend", &trend)?;
+    let mut top_candidate: Vec<(isize, f64)> = vec![];
+    let num = 45; // rdr.records().count();
+    for i in 0..num {
+        rdr = Reader::from_path(cli.file.as_str())?; // ugly
+        let candidate = rdr
+            .records()
+            .map(|r| r.unwrap().get(i).unwrap().parse::<f64>().unwrap())
+            .collect::<Vec<_>>();
+        let res = pcc(&obj, &candidate, 20).iter().fold((0, 0.0), |max, x| {
+            if x.1 > max.1 {
+                (x.0, x.1)
+            } else {
+                max
+            }
+        });
+        top_candidate.push(res);
+    }
 
-    let moved_trand = signal.iter().zip(trend.iter()).map(|(x, y)| x - y).collect::<Vec<_>>();
-    let (_, seasonality) = dft_filter_lowpass(&moved_trand, 86400.0, 0.015 / 86400.0, 3);
-    plot("seasonality.png", "seasonality", &seasonality)?;
-
-    let noise = moved_trand.iter().zip(seasonality.iter()).map(|(x, y)| x - y).collect::<Vec<_>>();
-    plot("noise.png", "noise", &noise)?;
-    let outlier = normal_outlier(&noise, 3.0);
-    println!("outliers: {:?}", outlier);
+    //top_candidate.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    //top_candidate.reverse();
+    //println!("{:?}", top_candidate);
+    let mut result: Vec<(usize, (isize, f64))> = vec![];
+    top_candidate.iter().enumerate().map(|(i, x)| result.push((i, *x))).count();
+    result.sort_by(|a, b| a.1 .1.partial_cmp(&b.1 .1).unwrap());
+    result.reverse();
+    println!("{:?}", result);
 
     Ok(())
 }
