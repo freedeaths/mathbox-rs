@@ -1,7 +1,6 @@
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-
 pub fn permutation_test(
     alist: &[f64],
     blist: &[f64],
@@ -28,12 +27,7 @@ pub fn permutation_test(
         }
     }
     let probability = better_num as f64 / (n_permutations + 1) as f64;
-    println!("p: {}", probability);
-    if probability <= p_value {
-        return true;
-    } else {
-        return false;
-    }
+    probability <= p_value
 }
 
 #[cfg(test)]
@@ -49,18 +43,12 @@ mod tests {
         let hypothesis = |a: &[f64], b: &[f64]| mean(a) - mean(b);
         let p_value = 0.05;
         let n_permutations = 1000;
-        assert_eq!(
-            permutation_test(&a, &b, &hypothesis, p_value, n_permutations),
-            false
-        );
+        assert_eq!(permutation_test(&a, &b, &hypothesis, p_value, n_permutations), false);
         let a = vec![1.01, 1.02, 1.03, 1.04, 1.05];
         let b = vec![0.99, 1.0, 1.01, 1.0, 1.01];
         let hypothesis = |a: &[f64], b: &[f64]| mean(a) - mean(b);
         let p_value = 0.05;
         let n_permutations = 1000;
-        assert_eq!(
-            permutation_test(&a, &b, &hypothesis, p_value, n_permutations),
-            true
-        );
+        assert_eq!(permutation_test(&a, &b, &hypothesis, p_value, n_permutations), true);
     }
 }
