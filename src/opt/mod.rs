@@ -1,1 +1,3 @@
+//! Optimization
+
 pub mod utils;

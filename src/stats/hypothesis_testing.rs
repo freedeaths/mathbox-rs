@@ -1,11 +1,11 @@
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-pub fn permutation_test(
-    alist: &[f64],
-    blist: &[f64],
-    hypothesis: &dyn Fn(&[f64], &[f64]) -> f64,
-    p_value: f64,
+pub fn permutation_test<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
+    alist: &[X],
+    blist: &[X],
+    hypothesis: &dyn Fn(&[X], &[X]) -> f64,
+    p_value: Y,
     n_permutations: usize,
 ) -> bool {
     let mut rng = thread_rng();
@@ -27,7 +27,7 @@ pub fn permutation_test(
         }
     }
     let probability = better_num as f64 / (n_permutations + 1) as f64;
-    probability <= p_value
+    probability <= p_value.into()
 }
 
 #[cfg(test)]
@@ -50,5 +50,12 @@ mod tests {
         let p_value = 0.05;
         let n_permutations = 1000;
         assert_eq!(permutation_test(&a, &b, &hypothesis, p_value, n_permutations), true);
+
+        let a = vec![1, 2, 3, 4, 5];
+        let b = vec![11, 12, 13, 14, 15, 11, 12, 13, 14, 15];
+        let hypothesis = |a: &[i32], b: &[i32]| mean(a) - mean(b);
+        let p_value = 0.05;
+        let n_permutations = 1000;
+        assert_eq!(permutation_test(&a, &b, &hypothesis, p_value, n_permutations), false);
     }
 }

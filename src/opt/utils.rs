@@ -1,8 +1,12 @@
 use find_peaks::PeakFinder;
 
-pub fn local_max(signal: &[f64], prominence: f64) -> Vec<usize> {
-    let mut fp = PeakFinder::new(signal);
-    fp.with_min_prominence(prominence);
+pub fn local_max<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
+    signal: &[X],
+    prominence: Y,
+) -> Vec<usize> {
+    let signal = signal.iter().map(|&x| x.into()).collect::<Vec<f64>>();
+    let mut fp = PeakFinder::new(&signal);
+    fp.with_min_prominence(prominence.into());
     let peaks = fp.find_peaks();
     peaks.iter().map(|x| x.middle_position()).collect::<Vec<usize>>()
 }
@@ -53,7 +57,12 @@ mod tests {
         let b = local_max(&a, 0.);
         let expected = vec![1, 3, 5, 7];
         assert_eq!(b, expected);
+        let a = vec![1, 3, 2, 4, 1, 3, 2, 4, 1];
+        let b = local_max(&a, 0);
+        let expected = vec![1, 3, 5, 7];
+        assert_eq!(b, expected);
     }
+
     #[test]
     fn test_argmax() {
         let a = vec![1, 2, 3, 4];

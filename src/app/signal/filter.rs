@@ -5,24 +5,24 @@ use num::Complex;
 
 //use crate::opt::utils::local_minimax;
 
-pub fn moving_average(signal: &[f64], window: usize) -> Vec<f64> {
+pub fn moving_average<T: Into<f64> + Copy>(signal: &[T], window: usize) -> Vec<f64> {
     if window > signal.len() {
         panic!("Window size must be smaller than signal length");
     }
     let mut sum = 0.0;
     let mut result = vec![0.0; signal.len()];
     for i in 0..window {
-        sum += signal[i];
+        sum += signal[i].into();
         result[i] = sum / (i + 1) as f64;
     }
     for i in window..signal.len() {
-        sum += signal[i] - signal[i - window];
+        sum += signal[i].into() - signal[i - window].into();
         result[i] = sum / window as f64;
     }
     result
 }
 
-pub fn moving_median(signal: &[f64], window: usize) -> Vec<f64> {
+pub fn moving_median<T: Into<f64> + Copy>(signal: &[T], window: usize) -> Vec<f64> {
     if window > signal.len() {
         panic!("Window size must be smaller than signal length");
     }
@@ -37,10 +37,17 @@ pub fn moving_median(signal: &[f64], window: usize) -> Vec<f64> {
     result
 }
 
-pub fn dft_filter_lowpass(
-    signal: &[f64],
-    dt: f64,
-    cutoff_frequency: f64,
+/// Fourier filter for `signal`.
+/// 
+/// `dt`: sample time step
+/// 
+/// `cutoff_frequency`: cut off low frequency components
+/// 
+/// `top_n`: output the top n frequency components of the signal
+pub fn dft_filter_lowpass<X: Into<f64> + Copy, Y: Into<f64> + Copy, Z: Into<f64> + Copy>(
+    signal: &[X],
+    dt: Y,
+    cutoff_frequency: Z,
     top_n: usize,
 ) -> (Vec<f64>, Vec<f64>) {
     let mut f_sig = rdft(signal); // real fourier transform
@@ -77,7 +84,7 @@ pub fn dft_filter_lowpass(
 
     // cut low frequency
     for i in 0..f_half.len() {
-        if f_half[i] < cutoff_frequency {
+        if f_half[i] < cutoff_frequency.into() {
             f_sig[i] = Complex::new(0.0, 0.0);
         }
     }
@@ -107,11 +114,23 @@ mod tests {
         for i in 0..signal.len() {
             assert_relative_eq!(result[i], expected[i]);
         }
+        let signal = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let result = moving_average(&signal, 3);
+        let expected = vec![1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        for i in 0..signal.len() {
+            assert_relative_eq!(result[i], expected[i]);
+        }
     }
 
     #[test]
     fn test_moving_median() {
         let signal = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0];
+        let result = moving_median(&signal, 3);
+        let expected = vec![1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        for i in 0..signal.len() {
+            assert_relative_eq!(result[i], expected[i]);
+        }
+        let signal = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         let result = moving_median(&signal, 3);
         let expected = vec![1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         for i in 0..signal.len() {
@@ -128,6 +147,31 @@ mod tests {
         }
         let signal = vec![1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0, 2.0, 3.0, 4.0, 3.0, 2.0, 1.0];
         let (_, result) = dft_filter_lowpass(&signal, 1.0, 0.0, 10000);
+        let expected = vec![
+            1.177546665236456,
+            2.220297731272131,
+            3.4049979717345273,
+            3.708219789800072,
+            2.8680187999032034,
+            1.610219856779601,
+            1.021398370548015,
+            1.6102198567796013,
+            2.8680187999032127,
+            3.708219789800072,
+            3.4049979717345247,
+            2.2202977312721237,
+            1.1775466652364555,
+        ];
+        for i in 0..signal.len() {
+            assert_relative_eq!(result[i], expected[i]);
+        }
+        let signal = vec![1, 1, 1, 1, 1, 1, 1, 1, 1];
+        let (_, result) = dft_filter_lowpass(&signal, 1.0, 0.0, 10000);
+        for i in 0..signal.len() {
+            assert_relative_eq!(result[i], signal[i] as f64);
+        }
+        let signal = vec![1, 2, 3, 4, 3, 2, 1, 2, 3, 4, 3, 2, 1];
+        let (_, result) = dft_filter_lowpass(&signal, 1, 0.0, 10000);
         let expected = vec![
             1.177546665236456,
             2.220297731272131,
