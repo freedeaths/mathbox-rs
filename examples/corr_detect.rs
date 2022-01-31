@@ -1,6 +1,6 @@
 use clap::Parser;
 use csv::Reader;
-use plotters::prelude::*;
+//use plotters::prelude::*;
 use std::error::Error;
 
 use mathbox::stats::estimator::pcc;
@@ -16,6 +16,7 @@ struct Cli {
     file: String,
 }
 
+/*
 fn plot(outfile: &str, name: &str, signal: &[f64]) -> Result<(), Box<dyn std::error::Error>> {
     let y_max = signal.iter().cloned().fold(f64::NAN, f64::max);
     let y_min: f64 = signal.iter().cloned().fold(f64::NAN, f64::min);
@@ -46,6 +47,7 @@ fn plot(outfile: &str, name: &str, signal: &[f64]) -> Result<(), Box<dyn std::er
 
     Ok(())
 }
+*/
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
