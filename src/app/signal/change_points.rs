@@ -32,6 +32,19 @@ fn calculate_t_stats<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
     }
 }
 
+/// Detect change points from a &[<Into<f64> + Copy>] vector.
+///
+/// References: [Energy distance](https://doi.org/10.1002/wics.1375) & [MongoDB paper](https://dl.acm.org/doi/10.1145/3358960.3375791)
+///
+/// # Examples
+///
+/// ```
+/// use mathbox::app::signal::change_points::e_divisive;
+/// let data_1 = [0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 1., 5., 5., 5., 5., 5.];
+/// let mut cp = e_divisive(&data_1, 3, 0.05, 100);
+/// cp.sort();
+/// assert_eq!(cp, vec![5, 10]);
+/// ```
 //#[no_mangle]
 pub fn e_divisive<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
     signal: &[X],

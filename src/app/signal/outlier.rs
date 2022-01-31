@@ -1,5 +1,6 @@
 use crate::stats::estimator::{mean, std};
 
+/// The simplist method to detect the outliers from a signal.
 pub fn iqr_outlier<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
     signal: &[X],
     iqr_factor: Y,
@@ -22,6 +23,17 @@ pub fn iqr_outlier<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
     (outlier_lo, outlier_hi)
 }
 
+/// Detect the outliers from a signal. The signal should be normal distributed. So it's better to decompose the signal first. 
+///
+/// # Examples
+///
+/// ```
+/// use mathbox::app::signal::outlier::normal_outlier;
+/// let signal: Vec<i32> = vec![-100000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100000000];
+/// let (lower, upper) = normal_outlier(&signal, 3);
+/// assert_eq!(lower, [0]);
+/// assert_eq!(upper, [21]);
+/// ```
 pub fn normal_outlier<X: Into<f64> + Copy, Y: Into<f64> + Copy>(
     normal: &[X],
     std_factor: Y,

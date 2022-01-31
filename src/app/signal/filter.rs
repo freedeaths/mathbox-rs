@@ -37,6 +37,13 @@ pub fn moving_median<T: Into<f64> + Copy>(signal: &[T], window: usize) -> Vec<f6
     result
 }
 
+/// Fourier filter for `signal`.
+/// 
+/// `dt`: sample time step
+/// 
+/// `cutoff_frequency`: cut off low frequency components
+/// 
+/// `top_n`: output the top n frequency components of the signal
 pub fn dft_filter_lowpass<X: Into<f64> + Copy, Y: Into<f64> + Copy, Z: Into<f64> + Copy>(
     signal: &[X],
     dt: Y,

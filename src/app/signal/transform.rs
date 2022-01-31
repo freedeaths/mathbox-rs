@@ -1,5 +1,6 @@
 use num::Complex;
 
+/// Discrete Fourier transform 
 pub fn dft<T: Into<f64> + Copy>(signal: &[T]) -> Vec<Complex<f64>> {
     let n = signal.len();
     let mut dft: Vec<Complex<f64>> = Vec::with_capacity(n);
@@ -20,10 +21,12 @@ pub fn dft<T: Into<f64> + Copy>(signal: &[T]) -> Vec<Complex<f64>> {
     dft
 }
 
+/// Real discrete Fourier transform 
 pub fn rdft<T: Into<f64> + Copy>(signal: &[T]) -> Vec<Complex<f64>> {
     dft(signal)[..(signal.len() / 2) + 1].to_vec()
 }
 
+/// Inverse discrete Fourier transform 
 pub fn idft<T: Into<f64> + Copy>(signal: &[Complex<T>]) -> Vec<f64> {
     let n = signal.len();
     let mut idft: Vec<f64> = Vec::with_capacity(n);
@@ -44,6 +47,7 @@ pub fn idft<T: Into<f64> + Copy>(signal: &[Complex<T>]) -> Vec<f64> {
     idft
 }
 
+/// Inverse real discrete Fourier transform 
 pub fn irdft<T: Into<f64> + Copy>(rfourier: &[Complex<T>]) -> Vec<f64> {
     let n = rfourier.len();
     let mut fourier =
@@ -61,6 +65,7 @@ pub fn irdft<T: Into<f64> + Copy>(rfourier: &[Complex<T>]) -> Vec<f64> {
     idft(&fourier)
 }
 
+/// Same as fftfreq from Python Numpy.
 pub fn dftfreq<T: Into<f64> + Copy>(n: usize, dt: T) -> Vec<f64> {
     let val = 1.0 / (n as f64 * dt.into());
     let mut result: Vec<f64> = vec![];
